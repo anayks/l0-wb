@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  test: 
+    build:
+      context:
+        ./cmd/service
+    command: make run
+    volumes:
+      - "./:/go/src/wildberries-l0"
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+      - nats
+    environment:
+      - DB_HOST=db
+      - DB_PASS=HEYO
+      - DB_USER=postgres
+      - DB_PORT=5432
+      - DB_NAME=postgres
+  db:
+    restart: always
+    image: postgres:latest
+    container_name: db
+    volumes:
+      - ./.database/postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=HEYO
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - 5432:5432
+  nats: 
+    image: nats-streaming:latest
+    container_name: nats-streaming
+    ports:
+      - 4222:4222
+      - 8223:8223

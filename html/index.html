@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Привет!</title>
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+
+            padding: 0;
+            margin: 0;
+
+        }
+
+        .flex {
+            width: 100%;
+
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .flex__child {
+            width: 50%;
+
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+
+            font-size: 1.8vh;
+
+            padding-top: 5vh;
+        }
+
+        #get_response, #add_response {
+            max-height: 70vh;
+            max-width: 40vw;
+            min-height: 70vh;
+            min-width: 40vw;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="flex">
+        <div class="flex__child">
+            <div>
+                Получить значение (укажите order_uiod):<br> 
+                <input id="order__input"/><button id="send">Получить</button><br><br>
+
+                Ответ:
+                <div>
+                    Код ответа: <span id="code"></span>
+                </div>
+                <textarea id="get_response">
+
+                </textarea>
+            </div>
+        </div>
+        <div class="flex__child">
+            <div>
+                Отправить (HTTP -> Nats-streaming -> Service's handler):<br><button id="nats__send">Отправить</button><br><br><br><br>
+                <textarea id="add_response">
+
+                </textarea>
+            </div>
+            
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+        const btn = document.getElementById("send") 
+        btn.addEventListener("click", onClickBtn)
+
+        const nats__send = document.getElementById("nats__send")
+        nats__send.addEventListener("click", onClickNatsSend);
+    });
+
+    function onClickNatsSend() {
+        const text = getAddText();
+        if(!text) {
+            alert("Текст отправки пустой, не надо так!")
+            return;
+        }
+        sendHTTPAdd(text)
+    }
+
+    function sendHTTPAdd(text) {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', 'http://localhost:8080/order/add', true);
+        xhr.send(text);
+        alert("Отправлено!")
+    }
+
+    function getAddText() {
+        const area = document.getElementById("add_response")
+        if(!area) {
+            return "";
+        }
+        return area.value;
+    }
+
+    function onClickBtn(e) {
+        const text = getInputText();
+        if(!text) {
+            alert("ID пустой, не надо так!")
+            return;
+        }
+        sendHTTPRequest(text)
+    }
+
+    function sendHTTPRequest(text) {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', 'http://localhost:8080/order/get', true);
+        xhr.send(text);
+
+        xhr.onreadystatechange = function() { 
+            if (xhr.readyState != 4) return;
+            if (xhr.status == 200) {
+                changeCodeText(xhr.status)
+                changeTextArea(xhr.response);
+            } else {
+                changeCodeText(xhr.status)
+                changeTextArea("");
+            }
+        }
+    }
+
+    function changeTextArea(text) {
+        const textArea = document.getElementById("get_response")
+        textArea.innerHTML = text
+    }
+
+    function changeCodeText(text) {
+        const code = document.getElementById("code")  
+        code.innerHTML = text;
+    }
+
+    function getInputText() {
+        const input = document.getElementById("order__input")
+        if(!input) {
+            return ""
+        }
+        const text = input.value;
+        return text
+    }
+</script>
+</html>
